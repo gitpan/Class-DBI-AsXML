@@ -1,5 +1,5 @@
 package Class::DBI::AsXML;
-# $Id: AsXML.pm,v 1.1 2005/01/11 00:38:03 cwest Exp $
+# $Id: AsXML.pm,v 1.2 2005/01/15 15:32:32 cwest Exp $
 use strict;
 
 =head1 NAME
@@ -31,13 +31,22 @@ Class::DBI::AsXML - Format CDBI Objects as XML
   my $uname_pwd_xml = $user->to_xml( columns => {
       ref($user) => [qw[username password]],
   });
+  
+  # Create from XML
+  my $new_user = MyApp::User->create_from_xml(<<__XML__);
+  <user>
+    <username>new_user</username>
+    <password>new_pass</password>
+    <email>&lt;casey@geeknest.com%gt;</email>
+  </user>
+  __XML__
 
 =cut
 
 use base qw[Exporter];
 use vars qw[@EXPORT $VERSION];
-$VERSION = sprintf "%d.%02d", split m/\./, (qw$Revision: 1.1 $)[1];
-@EXPORT  = qw[to_xml _to_xml_stringify];
+$VERSION = sprintf "%d.%02d", split m/\./, (qw$Revision: 1.2 $)[1];
+@EXPORT  = qw[to_xml create_from_xml _to_xml_stringify];
 
 use XML::Simple;
 use overload;
@@ -103,12 +112,20 @@ options are set.
   RootName => $self->moniker,
   XMLDecl  => 0,
 
+=head2 create_from_xml
+
+  my $new_user = MyApp::User->create_from_xml($xml);
+
+Creates a new user from an XML document. The document is parsed with
+C<XMLin> and the root node is thrown away. All information passed in
+to this method is ignored except the tags that match column names.
+
 =head1 EXPORTS
 
 This module is implemented as a mixin and therefore exports the
-functions C<to_xml> and C<_to_xml_stringify> into the caller's
-namespace. If you don't want these to be exported, then load
-this module using C<require>.
+functions C<to_xml>, C<create_from_xml>, and C<_to_xml_stringify> into
+the caller's namespace. If you don't want these to be exported, then
+load this module using C<require>.
 
 =cut
 
@@ -145,6 +162,19 @@ sub to_xml {
     return $xml;
 }
 
+sub create_from_xml {
+    my ($class, $xml) = @_;
+    
+    my $data = XMLin $xml;
+
+    my %args;
+    foreach ( $class->columns ) {
+        next unless exists $data->{$_};
+        $args{$_} = $data->{$_};
+    }
+    return $class->create(\%args);
+}
+
 sub _to_xml_stringify {
     my ($self, $val) = @_;
 
@@ -162,11 +192,6 @@ sub _to_xml_stringify {
 1;
 
 __END__
-
-=head1 TODO
-
-It would be nice to have a C<from_xml()> method. Patches most certainly
-welcome.
 
 =head1 SEE ALSO
 

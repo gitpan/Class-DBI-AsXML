@@ -25,6 +25,15 @@ SYNOPSIS
       my $uname_pwd_xml = $user->to_xml( columns => {
           ref($user) => [qw[username password]],
       });
+  
+      # Create from XML
+      my $new_user = MyApp::User->create_from_xml(<<__XML__);
+      <user>
+        <username>new_user</username>
+        <password>new_pass</password>
+        <email>&lt;casey@geeknest.com%gt;</email>
+      </user>
+      __XML__
 
 DESCRIPTION
     This software adds XML output support to "Class::DBI" based objects.
@@ -83,15 +92,18 @@ DESCRIPTION
       RootName => $self->moniker,
       XMLDecl  => 0,
 
+  create_from_xml
+      my $new_user = MyApp::User->create_from_xml($xml);
+
+    Creates a new user from an XML document. The document is parsed with
+    "XMLin" and the root node is thrown away. All information passed in to
+    this method is ignored except the tags that match column names.
+
 EXPORTS
     This module is implemented as a mixin and therefore exports the
-    functions "to_xml" and "_to_xml_stringify" into the caller's namespace.
-    If you don't want these to be exported, then load this module using
-    "require".
-
-TODO
-    It would be nice to have a "from_xml()" method. Patches most certainly
-    welcome.
+    functions "to_xml", "create_from_xml", and "_to_xml_stringify" into the
+    caller's namespace. If you don't want these to be exported, then load
+    this module using "require".
 
 SEE ALSO
     Class::DBI, XML::Simple, perl.

@@ -145,6 +145,16 @@ my $bear_hash = XMLin $bear_xml;
 is +(keys(%{$bear_hash})), 1, 'only one thing returned';
 is +(keys(%{$bear_hash}))[0], 'type', 'only one thing returned: type';
 
+my $new_from_xml = __PACKAGE__->create_from_xml(<<__XML__);
+<main>
+  <e_one>First Element</e_one>
+  <e_two>Second Element</e_two>
+</main>
+__XML__
+
+isa_ok $new_from_xml, __PACKAGE__;
+is $new_from_xml->e_one, 'First Element', 'first element correct';
+
 my @objects;
 sub create {
     my ($self, $args) = @_;
